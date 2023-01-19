@@ -1,4 +1,4 @@
-## GameOfLife
+## Game Of Life
 Personal Game Of Life in Haskell (learning-purpose only).
 
 ## References
