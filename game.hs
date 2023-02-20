@@ -1,35 +1,47 @@
-data CellState = Alive | Dead 
-data CellPosition = CellPosition Integer Integer
-type Generation = CellPosition -> CellState
+import Data.MemoTrie
 
-isAlive :: CellState -> Bool
-isAlive Alive = True
-isAlive Dead = False
+data State = Alive | Dead deriving (Eq, Show)
+type Pos = (Integer, Integer) 
+type Grid = Pos -> State
 
-cellNeigh :: CellPosition -> [CellPosition]
-cellNeigh (CellPosition x y) = 
-    [(CellPosition (x-1) (y-1)), (CellPosition x (y-1)),  (CellPosition (x+1) (y-1)), (CellPosition (x+1) y),
-  (CellPosition (x+1) (y+1)), (CellPosition x (y+1)), (CellPosition (x-1) (y+1)), (CellPosition (x-1) y)]
-    
-numAliveNeigh :: Generation -> CellPosition -> Int
-numAliveNeigh gen pos = 
-    length (filter isAlive (map gen (cellNeigh pos))) 
-    
-evolution :: Generation -> Generation 
-evolution gen pos = 
-    case (numAliveNeigh gen pos) of
-    2 -> if (isAlive (gen pos)) then Alive else Dead
-    3 -> Alive
-    _ -> Dead
-    
-    
-drawGen gen = map (drawCol gen) [1..10]
+evolution :: Grid -> Integer -> Grid
+evolution grid = memo2 go
+    where 
+        go 0 p = grid p
+        go n p = next (go (n-1) p) (map (go (n-1)) (neighbors p)) 
 
-drawCol :: Generation -> Integer -> String
-drawCol gen y = concat (map (drawCell gen y) [1..10])
+next :: State -> [State] -> State
+next Alive adj 
+        | count Alive adj < 2 = Dead
+        | count Alive adj > 3 = Dead
+        | otherwise = Alive
+next Dead adj
+        | count Alive adj == 3 = Alive
+        | otherwise = Dead
+            
+count :: Eq a => a -> [a] -> Int
+count x = length . filter (== x)
+        
+neighbors :: Pos -> [Pos]
+neighbors (x,y) = 
+    [(x+n, y+m) | m <- [-1,0,1], n <- [-1,0,1], (n,m) /= (0,0), x+n <= 3, y+m <= 3, x+n > 0, y+m > 0]
 
+drawGen gen = 
+    map (drawLine gen) [1..10]
+    
+drawLine :: Grid -> Integer -> String
+drawLine gen y = 
+    concat (map (drawCell gen y) [1..10])
+    
 drawCell gen y x = 
-    case (gen (CellPosition x y)) of 
-    Alive -> ['X']
-    Dead -> [' ']
+    case (gen (x,y)) of 
+        Alive -> ['X']
+        Dead -> [' ']
     
+main :: IO()
+main = do
+    let grid (_,_) = Dead
+    let grid (1,1) = Alive
+    let grid (2,2) = Alive
+    mapM_ print (drawGen grid)
+  
