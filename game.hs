@@ -24,7 +24,7 @@ count x = length . filter (== x)
         
 neighbors :: Pos -> [Pos]
 neighbors (x,y) = 
-    [(x+n, y+m) | m <- [-1,0,1], n <- [-1,0,1], (n,m) /= (0,0), x+n <= 3, y+m <= 3, x+n > 0, y+m > 0]
+    [(x+n, y+m) | m <- [-1,0,1], n <- [-1,0,1], (n,m) /= (0,0), x+n <= 10, y+m <= 10, x+n > 0, y+m > 0]
 
 drawGen gen = 
     map (drawLine gen) [1..10]
@@ -40,8 +40,10 @@ drawCell gen y x =
     
 main :: IO()
 main = do
-    let grid (_,_) = Dead
-    let grid (1,1) = Alive
-    let grid (2,2) = Alive
-    mapM_ print (drawGen grid)
-  
+    let grid (5,4) = Alive
+        grid (6,4) = Alive
+        grid (5,5) = Alive
+        grid (6,5) = Alive
+        grid (_,_) = Dead
+    mapM_ print (drawGen $ evolution grid 6)
+    
